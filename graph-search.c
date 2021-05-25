@@ -19,7 +19,7 @@ short int visited[MAX_VERTEX] = { 0 };       //DFS,BFS 정점 방문을 확인�
 short int check_vertex[MAX_VERTEX] = { 0 };  //인접리스트에 삽입된 정점을 확인하기 위해 필요한 배열 
 
 
-typedef struct _graphNode {     //인접리스트의 노드
+typedef struct graphNode {     //인접리스트의 노드
     struct graphNode* next;
     int vertex;
 }graphNode;
@@ -39,7 +39,6 @@ void push(int vertex);
 /* for queue */
 #define MAX_QUEUE_SIZE 10
 int queue[MAX_QUEUE_SIZE];   
-
 int front = -1;
 int rear = -1;
 
@@ -47,11 +46,10 @@ int deQueue();
 void enQueue(int vertex);
 
 /* 함수 선언 */
- //!!!!반환형 check하기!!!!! 
 void initialize_Graph();        /*초기화*/
 int insert_Vertex(int u);       /*정점삽입*/
 int insert_Edge(int u, int v);  /*간선삽입*/
-int DFS(int u);                 /*DFS*/
+void DFS(int u);                /*DFS*/
 int BFS(int u);                 /*BFS*/
 void print_Graph();             /*인접리스트 print*/
 int freeGraph();                /*메모리해제 */
@@ -242,12 +240,19 @@ int insert_Edge(int u, int v)  //u->v
 /* Depth First Search => tree의 preorder traversal과 유사
     방법 2가지: recursive(visit flag), iterative(stack+visit flag) */
 
-int DFS(int u)                      ///반환형 check하기 !!+ 오류검사하기 
+void DFS(int u)                      
 {
-    graphNode* cur = adjLists[u];
-    for (int i = 0; i < MAX_VERTEX; i++)
-        visited[i] = FALSE;           //0으로 초기화 
+     //정점 u가 존재하지 않을 때 오류검사하기!       
+    if (u < 0 || u >= MAX_VERTEX)
+    {
+        printf("Error: It is not a vertex that satisfies the conditions \n");
+        return ;
+    }
 
+    for (int i = 0; i < MAX_VERTEX; i++)
+        visited[i] = FALSE;     //DFS를 통해 탐색을 할 때, 방문한 vertex를 check하기 위해 0으로 초기화 
+
+    graphNode* cur = adjLists[u];
     printf("DFS: ");
     push(u);
     visited[u] = TRUE;
@@ -261,13 +266,13 @@ int DFS(int u)                      ///반환형 check하기 !!+ 오류검사하
             visited[cur->vertex] = TRUE;
             cur = adjLists[cur->vertex];
         }
-        else                        //방문한 적 있는 정점 방문시 -> stack에서 pop()실행
+        else                        //방문한 적 있는 정점 방문시 -> stack에서 pop()실행 후 print
         {
             //해당 정점 u와 간선을 이루는 노드들을 모두 방문했을 때
             if (!(cur->next))  //cur->next == NULL
             {
                 printf("%2d->", pop());
-                cur = adjLists[(stack[top])];           //!!!여기 조금 수정하기!!! -> 시간복잡도가 너무 커!!!
+                cur = adjLists[(stack[top])];          
             }
             //해당 정점 u와 간선을 이루는 노드 중 일부 방문하지 않았을 때 
             else
@@ -276,17 +281,15 @@ int DFS(int u)                      ///반환형 check하기 !!+ 오류검사하
     }
 }
 
-
 /* 스택에서 원소 삭제하는 함수 */
 int pop()
 {
     /* stack이 Empty인지 검사 */
     if (top == -1) //top=-1일때 스택이 비어있는상태로, 삭제할 원소가 존재하지 않음
-        return NULL; //NULL리턴 
+        return -1; 
     else
         return stack[top--]; //top에 위치한 원소를 반환하고, top의 위치를 -1한다
 }
-
 
 /* 스택에 원소 삽입하는 함수 */
 void push(int vertex)
