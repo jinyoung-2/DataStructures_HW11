@@ -157,7 +157,8 @@ int insert_Vertex(int u)
 }
 
 
-/* 간선 삽입 -> 오름차순으로 정렬 */
+/* 간선 삽입 -> 오름차순으로 정렬 
+=> vertex의 번호가 작은 vertex를 먼저 탐색하기 위해 정렬*/
 int insert_Edge(int u, int v)  //u->v  
 {
     if (u < 0 || u >= MAX_VERTEX || v < 0 || v >= MAX_VERTEX)   //오류검사             
