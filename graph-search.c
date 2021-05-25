@@ -8,8 +8,6 @@
  *
  */
 
-///////함수 원형 모두 작성됐는지 확인하기 
-
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -17,20 +15,21 @@
 
 #define FALSE 0
 #define TRUE 1
-short int visited[MAX_VERTEX] = { 0 };  //전역배열 visited 0으로 모두 초기화 
-short int check_vertex[MAX_VERTEX] = { 0 };  //삽입된 정점 check하기 위해 
+short int visited[MAX_VERTEX] = { 0 };       //DFS,BFS 정점 방문을 확인하기 위해 필요한 배열  
+short int check_vertex[MAX_VERTEX] = { 0 };  //인접리스트에 삽입된 정점을 확인하기 위해 필요한 배열 
 
 
-typedef struct _graphNode {
+typedef struct _graphNode {     //인접리스트의 노드
     struct graphNode* next;
     int vertex;
 }graphNode;
 
-graphNode* adjLists[MAX_VERTEX]; //그래프 정점들에 대한 헤드 포인터를 담는 배열(다른 정점을 가리키고 있는지를 확인하기 위해)
+graphNode* adjLists[MAX_VERTEX]; //그래프 정점들에 대한 헤드 포인터를 담는 배열
+
 
 /* for stack */
 #define MAX_STACK_SIZE 10
-int stack[MAX_STACK_SIZE];   //graphNode* stack[MAX_STACK_SIZE];? 이렇게 해야하는 이유가 있을까? 굳이?
+int stack[MAX_STACK_SIZE];   
 int top = -1;
 
 int pop();
@@ -39,7 +38,7 @@ void push(int vertex);
 
 /* for queue */
 #define MAX_QUEUE_SIZE 10
-int queue[MAX_QUEUE_SIZE];   //graphNode* queue[MAX_QUEUE_SIZE];? 이렇게 해야하는 이유가 있을까? 굳이?
+int queue[MAX_QUEUE_SIZE];   
 
 int front = -1;
 int rear = -1;
@@ -47,73 +46,142 @@ int rear = -1;
 int deQueue();
 void enQueue(int vertex);
 
-/* 함수 */
+/* 함수 선언 */
  //!!!!반환형 check하기!!!!! 
+void initialize_Graph();        /*초기화*/
+int insert_Vertex(int u);       /*정점삽입*/
+int insert_Edge(int u, int v);  /*간선삽입*/
+int DFS(int u);                 /*DFS*/
+int BFS(int u);                 /*BFS*/
+void print_Graph();             /*인접리스트 print*/
+int freeGraph();                /*메모리해제 */
+
+
+int main()
+{
+    char command;
+    int u,v; //정점 
+
+    printf("[----- [jinyounglee] [2020039063] -----]\n");
+
+    do {
+        printf("\n\n");
+        printf("----------------------------------------------------------------\n");
+        printf("                        Graph Searches                        \n");
+        printf("----------------------------------------------------------------\n");
+        printf(" Initialize Graph     = z                                       \n");
+        printf(" Insert Vertex        = v      Insert Edge                  = e \n");
+        printf(" Depth First Search   = d      Breath First Search          = b \n");
+        printf(" Print Graph          = p      Quit                         = q \n");
+        printf("----------------------------------------------------------------\n");
+
+        printf("Command = ");
+        scanf(" %c", &command);
+
+        switch (command) {
+        case 'z': case 'Z':
+            initialize_Graph();         
+            break;
+        case 'v': case 'V':
+            printf("Input one vertex: ");
+            scanf("%d", &u);
+            insert_Vertex(u);
+            break;
+        case 'e': case 'E':
+            printf("Please input two vertices: ");
+            scanf("%d %d", &u, &v);
+            insert_Edge(u, v);
+            break;
+        case 'd': case 'D':
+            printf("Input the vertex to be DFS: ");
+            scanf("%d", &u);
+            DFS(u);
+            break;
+        case 'b': case 'B':
+            printf("Input the vertex to be BFS: ");
+            scanf("%d", &u);
+            BFS(u);
+            break;
+        case 'p': case 'P':
+            print_Graph();      //인접리스트 출력
+            break;
+        case 'q': case 'Q':
+            freeGraph();      
+            break;
+        default:
+            printf("\n       >>>>>   Concentration!!   <<<<<     \n");
+            break;
+        }
+
+    } while (command != 'q' && command != 'Q');
+
+    return 1;
+}
 
 
 /* 초기화 */
-void initialize_Graph()    //Q. 왜 이중포인터로 사용안해?
+void initialize_Graph()    
 {
     //인접리스트에 간선관련 노드가 존재하는지 검사  
     for (int i = 0; i < MAX_VERTEX; i++)
     {
-        if (adjLists[i] != NULL)    //인접리스트에 간선관련 노드가 존재할 때 
+        if (adjLists[i] != NULL)    //인접리스트에 간선관련 노드가 존재시 
         {
             freeGraph();
             break;
         }
     }
 
-    //인접리스트 노드 모두 해제시킨 후,  
+    //인접리스트 노드 모두 해제시킨 후  
     for (int i = 0; i < MAX_VERTEX; i++)
-        adjLists[i] = NULL;   //포인터배열 NULL로 초기화
+        adjLists[i] = NULL;         //포인터배열 NULL로 초기화
 }
 
-///short int check_vertex[MAX_VERTEX]={0};  //삽입된 정점 check하기 위해  ---> 제출하기 전에 삭제하기 
-//정점 삽입 
-void insert_Vertex(int u)
+
+/* 정점 삽입 */
+int insert_Vertex(int u)
 {
     if (u < 0 || u >= MAX_VERTEX)  //오류 검사        
     {
         printf("Error: It is not a vertex that satisfies the conditions \n");
-        return;
+        return -1;
     }
 
     if (check_vertex[u] == 1)    //이미 존재하는 정점일 경우
     {
-        printf("A vertex that already exists \n");
-        return;
+        printf("ERROR: A vertex that already exists \n");
+        return -1;
     }
 
     //check_vertex[u]==0으로, 이전에 u가 삽입되지 않았을 때
     check_vertex[u] = 1;
-    return;
+    return 0;
 }
 
 
-//간선 삽입 -> 오름차순으로 정렬 
-int insert_Edge(int u, int v)  //u->v   //Q. graphNode** adjLists[]가 매개변수가 아닌지 생각해보기
+/* 간선 삽입 -> 오름차순으로 정렬 */
+int insert_Edge(int u, int v)  //u->v  
 {
     if (u < 0 || u >= MAX_VERTEX || v < 0 || v >= MAX_VERTEX)   //오류검사             
     {
-        printf("Error:It is not vertexs that satisfy the conditions \n");
+        printf("Error: There are not vertexs that satisfy the conditions \n");
         return -1;
     }
     if (check_vertex[u] == 0)  //삽입된 정점이 아닌 경우 오류 발생 
     {
-        printf("Error:Not an inserted vertex \n");
+        printf("Error: Not an inserted vertex \n");
         return -1;
     }
-    //** 기존에 삽입한 간선일 때-> Q.Q.  이미 존재한다고 어떻게 검사하면 좋을까? 
 
+    //간선 삽입을 위해 새로운 노드 생성 및 초기화
     graphNode* newnode = NULL;
     newnode = (graphNode*)malloc(sizeof(graphNode));
     newnode->vertex = v;
     newnode->next = NULL;
 
+    //노드들을 정렬하기 위해 graphNode형 포인터 2개 생성 및 초기화 
     graphNode* prev = NULL;
     graphNode* cur = adjLists[u];
-
 
     //해당 정점에 간선이 존재하지 않을 때
     if (!cur) //cur=NULL
@@ -136,8 +204,8 @@ int insert_Edge(int u, int v)  //u->v   //Q. graphNode** adjLists[]가 매개변
             return 0;
         }
     }
-    //해당 정점에 간선이 두 개 이상 존재할 때
-    //각각의 정점의 맨 앞과 맨 뒤에 간선이 삽입될 때 고려하기!! 
+    /* 해당 정점에 간선이 두 개 이상 존재할 때
+        -> 각각의 정점의 맨 앞과 맨 뒤에 간선이 삽입될 때 고려하기!! */
     else
     {
         while (cur)
@@ -146,35 +214,35 @@ int insert_Edge(int u, int v)  //u->v   //Q. graphNode** adjLists[]가 매개변
             {
                 if (cur == adjLists[u]) //해당 정점 맨 앞에 삽입될 때 
                 {
-                    newnode->next = cur;
                     adjLists[u] = newnode;
+                    newnode->next = cur;
                     return 0;
                 }
                 //그 이외에 삽입될 때
-                newnode->next = cur;
                 prev->next = newnode;
+                newnode->next = cur;
                 return 0;
             }
-            else //v>=cur->vertex
+            else //v>=cur->vertex일 때, prev와 cur 이동
             {
                 prev = cur;
                 cur = cur->next;
             }
         }
-        //cur=NULL일 때 -> prev이 마지막 노드 
+        //cur==NULL일 때 -> prev가 가리키는 노드가 마지막 노드일 때(정점 v가 가장 큰 값일 때) 
         prev->next = newnode;
         return 0;
     }
 }
 
+
 /*그래프 탐색이란, 하나의 정점으로부터 시작해 차례대로 모든 정점들을 한 번씩 방문하는 것
   => DFS, BFS */
 
-  /* Depth First Search => tree의 preorder traversal과 유사
-      방법 2가지: recursive(visit flag), iterative(stack+visit flag) */
+/* Depth First Search => tree의 preorder traversal과 유사
+    방법 2가지: recursive(visit flag), iterative(stack+visit flag) */
 
-//pop할 때 print하기 
-void DFS(int u)
+int DFS(int u)                      ///반환형 check하기 !!+ 오류검사하기 
 {
     graphNode* cur = adjLists[u];
     for (int i = 0; i < MAX_VERTEX; i++)
@@ -233,55 +301,52 @@ void push(int vertex)
         방법 2가지: recursive(visit flag), iterative(queue+visit flag) */
 int BFS(int u)
 {
-    //정점 v가 존재하지 않을 때 오류검사하기!       
+    //정점 u가 존재하지 않을 때 오류검사하기!       
     if (u < 0 || u >= MAX_VERTEX)
     {
-        printf("ERROR: \n");
+        printf("Error: It is not a vertex that satisfies the conditions \n");
         return -1;
     }
 
     for (int i = 0; i < MAX_VERTEX; i++)
-        visited[i] = FALSE;
+        visited[i] = FALSE;     //BFS를 통해 탐색을 할 때, 방문한 vertex를 check하기 위해 0으로 초기화 
 
     /* iterative 방식 */
     graphNode* cur = NULL;
-    visited[u] = TRUE;    //visit marking
+    visited[u] = TRUE;          //visiting marking
     enQueue(u);
-
     printf("BFS: ");
 
-    //공백 queue이기전까지 반복 -> 조건식 check
-    while (front!=rear)                //!!여기서 큐는 순환큐를 굳이 사용할 필요가 없음. 
+    //공백 queue이기전까지 반복 
+    while (front!=rear)                
     {
         u = deQueue();
         printf("%2d->", u);
-        for (cur = adjLists[u]; cur; cur = cur->next)          //Q. check_vertex 배열사용 안 해도 괘찬"?
+        for (cur = adjLists[u]; cur; cur = cur->next)          
         {
-            if (!visited[cur->vertex])   //방문하지 않은 노드일 때 
+            if (!visited[cur->vertex])              //방문하지 않은 노드일 때 
             {
-                visited[cur->vertex] = TRUE;
-                enQueue(cur->vertex);
+                visited[cur->vertex] = TRUE;        //visiting marking
+                enQueue(cur->vertex);               //queue에 삽입 
             }
             else    //방문한 노드일 때 
                 continue;
         }
 
     }
-    //공백 queue일 때 (=모든 vertex방문)
+    //공백 queue일 때 (= 모든 vertex방문)
     printf("\n");
     return 0;
 }
-
 
 /* queue에서 원소 삭제하는 함수 */
 int deQueue()
 {
     /* queue가 empty인지 검사 */
     if (rear == front) //queue가 empty일 때(rear과 front 동일) -> 삭제할 원소 없음
-        return NULL; //NULL 반환
+        return -1;
     return queue[(++front) % MAX_QUEUE_SIZE]; //front를 front+1로 재설정하고, 변경된 front에 위치한 queue의 원소 반환
 }
-
 
 /* queue에서 원소 삽입하는 함수 */
 void enQueue(int vertex)
@@ -292,14 +357,15 @@ void enQueue(int vertex)
 }
 
 
-void print_Graph()  //check하기 !! 매개변수 형태 저렇게 써도 되나?
+/* 인접리스트 출력 */
+void print_Graph()  
 {
     graphNode* cur = NULL;
     printf("adjLists: \n");
     for (int i = 0; i < MAX_VERTEX; i++)
     {
         printf("vertex %2d: ", i);
-        cur = adjLists[i];          //Q. cur=h->adjLists[i]->next;로 둬야 해당 정점과 edge를 가지는 정점이 출력되지 않나? 
+        cur = adjLists[i];                  //각각의 vertex와 인접한 노드 출력 
         while (cur)
         {
             printf("%2d->", cur->vertex);
@@ -309,12 +375,15 @@ void print_Graph()  //check하기 !! 매개변수 형태 저렇게 써도 되나
     }
 }
 
+
+/* 메모리 해제 */
 int freeGraph()
 {
+    /* 인접리스트 메모리 해제를 위해 graphNode* 포인터 2개 생성 */
     graphNode* trail = NULL;
     graphNode* middle = NULL;
 
-    for (int i = 0; i < MAX_VERTEX; i++)       //조건식 수정하기!!!!
+    for (int i = 0; i < MAX_VERTEX; i++)       
     {
         middle = adjLists[i];
         while (middle)
@@ -325,65 +394,4 @@ int freeGraph()
         }
     }
     return 0;
-}
-
-int main()
-{
-    char command;
-    int u,v; //정점 
-
-    printf("[----- [jinyounglee] [2020039063] -----]\n");
-
-    do {
-        printf("\n\n");
-        printf("----------------------------------------------------------------\n");
-        printf("                        Graph Searches                        \n");
-        printf("----------------------------------------------------------------\n");
-        printf(" Initialize Graph     = z                                       \n");
-        printf(" Insert Vertex        = v      Insert Edge                  = e \n");
-        printf(" Depth First Search   = d      Breath First Search          = b \n");
-        printf(" Print Graph          = p      Quit                         = q\n");
-        printf("----------------------------------------------------------------\n");
-
-        printf("Command = ");
-        scanf(" %c", &command);
-
-        switch (command) {
-        case 'z': case 'Z':
-            initialize_Graph();         //인자 형태 맞는지 체크하기   
-            break;
-        case 'v': case 'V':
-            printf("Input one vertex: ");
-            scanf("%d", &u);
-            insert_Vertex(u);
-            break;
-        case 'e': case 'E':
-            printf("Please input two vertices. ");
-            scanf("%d %d", &u, &v);
-            insert_Edge(u, v);
-            break;
-        case 'd': case 'D':
-            printf("Input the vertex to be DFS: ");
-            scanf("%d", &u);
-            DFS(u);
-            break;
-        case 'b': case 'B':
-            printf("Input the vertex to be BFS: ");
-            scanf("%d", &u);
-            BFS(u);
-            break;
-        case 'p': case 'P':
-            print_Graph(); //인접리스트 출력함수
-            break;
-        case 'q': case 'Q':
-            freeGraph();       //인자 형태 맞는지 체크하기
-            break;
-        default:
-            printf("\n       >>>>>   Concentration!!   <<<<<     \n");
-            break;
-        }
-
-    } while (command != 'q' && command != 'Q');
-
-    return 1;
 }
